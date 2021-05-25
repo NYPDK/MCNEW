@@ -1,12 +1,38 @@
-import requests, time, threading
+import requests, time, threading, os
 from lxml import html
 
+clear = lambda: os.system('cls')
+
+
+
 min_players = input('Minimum player count: ')
+
+mmp_found = 0
+mmp_errors = 0
+tms_found = 0
+tms_errors = 0
+ms_found = 0
+ms_errors = 0
 
 with open('T:\Python Projects\MC new server scraper\Result.txt', 'w') as file:
     file.write('')
 
+def GUI():
+    global mmp_found
+    global mmp_errors
+    global tms_found
+    global tms_errors
+    global ms_found
+    global ms_errors
+    
+    while(True):
+        clear()
+        print(f'Servers on MMP Found: {mmp_found}\nErrors while scanning MMP: {mmp_errors}\n\nServers on TMS Found: {tms_found}\nErrors while scanning TMS: {tms_errors}\n\nServers on MS Found: {ms_found}\nErrors while scanning MS: {ms_errors}\n\n')
+        time.sleep(0.5)
+
 def mmp():
+    global mmp_found
+    global mmp_errors
     for page in range(1, 10000): #loads page after page on the site
         URL = f'https://minecraft-mp.com/servers/latest/{page}/'
         page = requests.get(URL)
@@ -25,14 +51,19 @@ def mmp():
                     if not name:
                         name = ['Unknown']
                 
-                    print(f'IP: {ip[0]} - Name: {name[0]} - Country: {country[0]} - Status: {online[0]} - Version: {version[0]} - Players: {players[0]}')
+                    #print(f'IP: {ip[0]} - Name: {name[0]} - Country: {country[0]} - Status: {online[0]} - Version: {version[0]} - Players: {players[0]}')
                     with open('T:\Python Projects\MC new server scraper\Result.txt', 'a') as file:
                         file.write(f'IP: {ip[0]}\n    Name: {name[0]}\n    Country: {country[0]}\n    Status: {online[0]}\n    Version: {version[0]}\n    Players: {players[0]}\n    Found on: minecraft-mp.com\n\n')
-                    time.sleep(0.1)
+                    mmp_found += 1
+                    #time.sleep(0.1)
             except Exception as e:
-                print(f'Error mmp: {e}')
+                #print(f'Error mmp: {e}')
+                mmp_errors += 1
+                #return
 
 def tms():
+    global tms_found
+    global tms_errors
     for page in range(1, 10000): #loads page after page on the site
         URL = f'https://topminecraftservers.org/sort/new/page/{page}'
         if(page == 1): #Checks if it is on the first page of the site (due to promoted servers)
@@ -53,14 +84,19 @@ def tms():
                 
                 if str(players[0]) != 'Offline' and int(str(players[0])) >= int(min_players): #Checks if there are equal to or more players than the min allowed, also if it says offline where it normally says players
 
-                    print(f'IP: {ip[0]} - Country: {country[0]} - Version: {version[0]} - Players: {players[0]}')
+                    #print(f'IP: {ip[0]} - Country: {country[0]} - Version: {version[0]} - Players: {players[0]}')
                     with open('T:\Python Projects\MC new server scraper\Result.txt', 'a') as file:
                             file.write(f'IP: {ip[0]}\n    Country: {country[0]}\n    Version: {version[0]}\n    Players: {players[0]}\n    Found on: topminecraftservers.org\n\n')
-                    time.sleep(0.1)
+                    tms_found += 1
+                    #time.sleep(0.1)
             except Exception as e:
-                print(f'Error tms: {e}')
+                #print(f'Error tms: {e}')
+                tms_errors += 1
+                #return
 
 def ms():
+    global ms_found
+    global ms_errors
     for page in range(1, 10000): #loads page after page on the site
         URL = f'https://minecraft-server.net/rank/{page}/newest/'
         if(page == 1): #Checks if it is on the first page of the site (due to promoted servers)
@@ -80,17 +116,22 @@ def ms():
                 
                 if int(str(players[0])) >= int(min_players): #Checks if there are equal to or more players than the min allowed
 
-                    print(f'IP: {ip[0]} - Name: {name[0]}  - Players: {players[0]}')
+                    #print(f'IP: {ip[0]} - Name: {name[0]}  - Players: {players[0]}')
                     with open('T:\Python Projects\MC new server scraper\Result.txt', 'a') as file:
                             file.write(f'IP: {ip[0]}\n    Name: {name[0]}\n    Players: {players[0]}\n    Found on: minecraft-server.net\n    (unable to check server status & version :cry:)\n\n')
-                    time.sleep(0.1)
+                    ms_found += 1
+                    #time.sleep(0.1)
             except Exception as e:
-                print(f'Error ms: {e}')
+                #print(f'Error ms: {e}')
+                ms_errors += 1
+                #return
 
 if __name__ == "__main__":
+    threadGUI = threading.Thread(target=GUI)
     threadTMS = threading.Thread(target=tms)
     threadMMP = threading.Thread(target=mmp)
     threadMS = threading.Thread(target=ms)
+    threadGUI.start()
     threadTMS.start()
     threadMMP.start()
     threadMS.start()
